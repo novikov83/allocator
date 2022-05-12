@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 #include <vector>
 #include <map>
 
@@ -99,7 +100,7 @@ public:
 	void construct(U* p, Args&& ...args) {
 		// std::cerr << "construct():" << std::endl;
 		new(p) U(std::forward<Args>(args)...);
-	};
+	}
 
 	void destroy(pointer p) {
 		// std::cerr << "destroy():" << std::endl;
