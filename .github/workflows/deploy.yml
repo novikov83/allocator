@@ -1,0 +1,72 @@
+# Имя может быть любое, но желательно без пробелов
+name: allocator
+
+on:
+  push:
+    # должно срабатывать на создание tag в ветке master
+    tags: [ mater ]
+    # срабатывает на push в ветку master
+    branches: [ master ]
+
+# глобальные переменные
+env:
+  VAR1: 777
+  VAR2: ${{github.sha}}
+
+jobs:
+  # build это просто имя - можно давать любое имя. Это будет название джоба. Каждый джоб запускается на своей виртуальной машине
+  build:
+    # операционная система
+    runs-on: ubuntu-latest
+
+    # обязательная секция
+    steps:
+    # чекаут нашего проекта
+    - uses: actions/checkout@v3
+
+    # установка буста
+    # - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
+
+    - name: Configure
+      run: cmake -B ${{github.workspace}}/build -DPATCH_VERSION=${{github.run_number}}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build
+      
+    - name: Package
+      run: cmake --build ${{github.workspace}}/build --target package
+      
+    - name: List
+      run: ls -la build
+      
+    - name: Create
+      id: create
+      uses: actions/create-release@v1
+      env: 
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      with:
+        tag_name: ${{github.run_number}}
+        release_name: Release ${{github.run_number}}
+        draft: false
+        prerelease: false
+
+    - name: Upload 
+      id: upload
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      with:
+        upload_url: ${{steps.create.outputs.upload_url}}
+        asset_path: ./build/allocator-0.0.${{github.run_number}}-Linux.deb
+        asset_name: allocator-0.0.${{github.run_number}}-Linux.deb
+        asset_content_type: application/vnd.debian.binary-package
+
+  print:
+    runs-on: ubuntu-latest
+    # ждать завершения джоба build
+    needs: [build]
+    steps:
+      # при помощи name обозначаем таски внутри джоба (они печатаются)
+      - name: Hello Actions
+        run: echo "VAR1 ${{env.VAR1}}"
+        #run: echo "Git hash: ${{ env.var }} "
