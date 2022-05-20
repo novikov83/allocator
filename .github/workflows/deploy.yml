@@ -27,6 +27,12 @@ jobs:
     # установка буста
     # - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
 
+    # установка googletest
+    - run: sudo apt-get update && sudo apt-get install libgtest-dev -y
+
+    # установка pthread (требуется для googletest)
+    - run: sudo apt-get update && sudo apt-get install libpthread-stubs0-dev -y
+
     - name: Configure
       run: cmake -B ${{github.workspace}}/build -DPATCH_VERSION=${{github.run_number}}
 
